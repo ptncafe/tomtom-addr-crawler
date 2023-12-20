@@ -1,10 +1,12 @@
 package main
 
 import (
-	"log"
-	"time"
-
+	"encoding/csv"
+	"fmt"
 	"github.com/playwright-community/playwright-go"
+	"io"
+	"log"
+	"os"
 )
 
 const domain_url = "https://plan.tomtom.com/en/?p=10.82734,106.66315,9.55z&q=10.76397248,106.6881186"
@@ -27,22 +29,66 @@ func main() {
 	if _, err = page.Goto(domain_url); err != nil {
 		log.Fatalf("could not goto: %v", err)
 	}
-	err = page.Locator("input#search").Click()
-	if err != nil {
-		log.Fatalf("(\"input#search\").Click(): %v", err)
-	}
-	err = page.Locator("input#search").Clear()
-	if err != nil {
-		log.Fatalf("(\"input#search\").Click(): %v", err)
-	}
 
-	err = page.Locator("input#search").Fill("10.76131214,106.6888455")
+	f, err := os.Open("data/data.csv")
 	if err != nil {
-		log.Fatalf("(\"input#search\").Click(): %v", err)
+		log.Fatal(err)
 	}
-	time.Sleep(1000)
-	locatorList, err := page.Locator("#page-container > div.page-map > div.panels-container > div.panels-container__panel.panel-template.panel-template--top.panel-template--search > div.animation-wrapper.animation-wrapper--search-routes > div > div > div > div > div > div.simplebar-wrapper > div.simplebar-mask > div > div > div > div > div:nth-child(1)").All()
-	log.Printf(".search-results.search-results--search .lists-item.lists-item--two-line %v", locatorList)
+	fileResult, err := os.Create("data/result.csv")
+	if err != nil {
+		log.Fatal(err)
+	}
+	// remember to close the file at the end of the program
+	defer f.Close()
+	defer fileResult.Close()
+
+	// read csv values using csv.Reader
+	csvReader := csv.NewReader(f)
+	writer := csv.NewWriter(fileResult)
+	defer writer.Flush()
+	index := -1
+	for {
+		rec, err := csvReader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		index++
+		if index <= 0 {
+			continue
+		}
+		// do something with read line
+		log.Printf("%+v\n", rec)
+		if err = page.Locator("input#search").Click(); err != nil {
+			log.Fatalf("(\"input#search\").Click(): %v", err)
+		}
+		if err = page.Locator("input#search").Clear(); err != nil {
+			log.Fatalf("(\"input#search\").Click(): %v", err)
+		}
+		latLong := fmt.Sprintf("%s,%s", rec[1], rec[2])
+		err = page.Locator("input#search").Fill(latLong)
+		if err != nil {
+			log.Fatalf("(\"input#search\").Click(): %v", err)
+		}
+		if err = page.Locator(".list-group-item-wrapper").First().WaitFor(playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateVisible}); err != nil {
+			log.Fatalf(".list-group-item-wrapper: %v", err)
+		}
+		firstAutoComplete, err := page.Locator(".list-group-item-wrapper").First().Locator(".body.list-two-line-text__title").TextContent()
+		if err != nil {
+			log.Fatalf(".list-group-item-wrapper: %v", err)
+		}
+		firstAutoCompleteDesc, err := page.Locator(".list-group-item-wrapper").First().Locator(".body-s.list-two-line-text__bottom-left").TextContent()
+		log.Printf("firstAutoComplete %s %s %s", latLong, firstAutoComplete, firstAutoCompleteDesc)
+		rec = append(rec, firstAutoComplete)
+		rec = append(rec, firstAutoCompleteDesc)
+
+		writer.Write(rec)
+		if err = page.Locator("#page-container  .header__middle-area button.is-right").Click(); err != nil {
+			log.Fatalf("button.is-right Click %v", err)
+		}
+	}
 
 	if err = browser.Close(); err != nil {
 		log.Fatalf("could not close browser: %v", err)
