@@ -7,6 +7,7 @@ import (
 	"github.com/playwright-community/playwright-go"
 	"github.com/sirupsen/logrus"
 	"io"
+	"log"
 	"os"
 	"time"
 )
@@ -14,6 +15,15 @@ import (
 const domain_url = "https://plan.tomtom.com/en/?p=10.82734,106.66315,9.55z&q=10.76397248,106.6881186"
 
 func CrawlAddressFromTomtom(ctx context.Context, domainUrl string, inputFile string, outputFile string) error {
+
+	defer func() {
+		if r := recover(); r != nil {
+			errSM := SendMessageTelegram(0, fmt.Sprintf("[ERROR] crawl-tomtom-addr got panic: %v", r))
+			if errSM != nil {
+				log.Fatal(errSM)
+			}
+		}
+	}()
 	if len(domainUrl) <= 0 {
 		domainUrl = domain_url
 	}

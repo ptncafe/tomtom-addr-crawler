@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/ptncafe/tomtom-addr-crawler/module"
 	"github.com/urfave/cli/v2"
 	"log"
@@ -8,6 +9,10 @@ import (
 )
 
 func main() {
+	hostName, err := os.Hostname()
+	if err != nil {
+		panic(err)
+	}
 
 	app := &cli.App{
 		Commands: []*cli.Command{
@@ -42,6 +47,10 @@ func main() {
 						c.String("output"),
 					)
 					if err != nil {
+						errSM := module.SendMessageTelegramRetry(0, fmt.Sprintf("[ERROR] crawl-tomtom-addr %s got error: %v", hostName, err), 5)
+						if errSM != nil {
+							log.Fatal(errSM)
+						}
 						log.Fatalf("CrawlAddressFromTomtom %v", err)
 					}
 					return nil
