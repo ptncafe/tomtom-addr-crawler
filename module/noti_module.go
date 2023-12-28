@@ -44,7 +44,7 @@ func SendMessageTelegramRetry(chatID int64, text string, attempts uint) error {
 			return nil
 		},
 		retry.Attempts(attempts),
-		retry.Delay(time.Second*5),
+		retry.Delay(time.Minute*5),
 	)
 	if err != nil {
 		logrus.Fatalf("SendMessageTelegramRetry err %v", err)

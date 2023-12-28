@@ -3,7 +3,9 @@ package module
 import (
 	"context"
 	"encoding/csv"
+	"errors"
 	"fmt"
+	"github.com/avast/retry-go"
 	"github.com/playwright-community/playwright-go"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -84,10 +86,25 @@ func CrawlAddressFromTomtom(ctx context.Context, domainUrl string, inputFile str
 		if index <= 0 {
 			continue
 		}
-		if err = crawlDetail(ctx, page, rec, writer); err != nil {
-			logrus.WithError(err).Error("crawlDetail %v %v", rec, err)
-			return err
-		}
+		err = retry.Do(
+			func() error {
+				if errDetail := crawlDetail(ctx, page, rec, writer); errDetail != nil {
+					logrus.WithError(errDetail).Error("crawlDetail %v %v", rec, errDetail)
+					return errDetail
+				}
+				return nil
+			},
+			retry.Attempts(5),
+			retry.Delay(time.Minute*1),
+			retry.RetryIf(func(err error) bool {
+				if errors.Is(err, playwright.ErrTimeout) {
+					logrus.WithError(err).Error("crawlDetail retry %v", rec)
+					return true
+				}
+				return true
+			}),
+		)
+
 	}
 
 	if err = browser.Close(); err != nil {

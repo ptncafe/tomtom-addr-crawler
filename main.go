@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/ptncafe/tomtom-addr-crawler/module"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
+	"time"
 )
 
 func main() {
@@ -53,6 +55,8 @@ func main() {
 						}
 						log.Fatalf("CrawlAddressFromTomtom %v", err)
 					}
+					logrus.Infof("[INFO] crawl-tomtom-addr %s done", hostName)
+					module.SendMessageTelegramRetry(0, fmt.Sprintf("[INFO] crawl-tomtom-addr %s done at %s", hostName, time.Now().Format(time.RFC3339)), 5)
 					return nil
 				},
 			},
