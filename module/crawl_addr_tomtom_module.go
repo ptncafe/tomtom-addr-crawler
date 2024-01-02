@@ -3,7 +3,6 @@ package module
 import (
 	"context"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"github.com/avast/retry-go"
 	"github.com/playwright-community/playwright-go"
@@ -17,6 +16,7 @@ import (
 const domain_url = "https://plan.tomtom.com/en/?p=10.82734,106.66315,9.55z&q=10.76397248,106.6881186"
 
 func CrawlAddressFromTomtom(ctx context.Context, domainUrl string, inputFile string, outputFile string) error {
+	hostName, err := os.Hostname()
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -41,7 +41,7 @@ func CrawlAddressFromTomtom(ctx context.Context, domainUrl string, inputFile str
 		return err
 	}
 	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
-		Headless: playwright.Bool(false),
+		Headless: playwright.Bool(true),
 	})
 	if err != nil {
 		logrus.WithError(err).Error("Chromium.Launch %v", err)
@@ -90,19 +90,13 @@ func CrawlAddressFromTomtom(ctx context.Context, domainUrl string, inputFile str
 			func() error {
 				if errDetail := crawlDetail(ctx, page, rec, writer); errDetail != nil {
 					logrus.WithError(errDetail).Error("crawlDetail %v %v", rec, errDetail)
+					go SendMessageTelegramRetry(0, fmt.Sprintf("[WARN] crawl-tomtom-addr %s %v", hostName, err), 5)
 					return errDetail
 				}
 				return nil
 			},
 			retry.Attempts(5),
 			retry.Delay(time.Minute*1),
-			retry.RetryIf(func(err error) bool {
-				if errors.Is(err, playwright.ErrTimeout) {
-					logrus.WithError(err).Error("crawlDetail retry %v", rec)
-					return true
-				}
-				return true
-			}),
 		)
 
 	}
