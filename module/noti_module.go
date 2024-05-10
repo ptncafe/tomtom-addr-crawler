@@ -8,7 +8,7 @@ import (
 )
 
 var bot *tgbotapi.BotAPI
-var bt = "6782199937:AAFfY7MAOReRlMDZuJR5xzTsRbq42-RmfYs"
+var bt = "empty"
 
 func SendMessageTelegram(chatID int64, text string) error {
 	if bot == nil {
