@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/ptncafe/tomtom-addr-crawler/module"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
 	"log"
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
+	"github.com/ptncafe/tomtom-addr-crawler/module"
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
@@ -15,7 +17,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
+	err = godotenv.Load()
+	if err != nil {
+	  log.Printf("Error loading .env file")
+	  err = nil
+	}
 	app := &cli.App{
 		Commands: []*cli.Command{
 			{
@@ -40,6 +46,12 @@ func main() {
 						Value:   "https://plan.tomtom.com/en/?p=10.82734,106.66315,9.55z&q=10.76397248,106.6881186",
 						Usage:   "Tomtom Domain",
 					},
+					&cli.StringFlag{
+						Name:    "debug",
+						Aliases: []string{"g"},
+						Value:   "false",
+						Usage:   "debug",
+					},
 				},
 				Usage: "Crawl the address from the server Tomtom by browser",
 				Action: func(c *cli.Context) error {
@@ -47,6 +59,7 @@ func main() {
 						c.String("domain-url"),
 						c.String("input"),
 						c.String("output"),
+						c.String("debug"),
 					)
 					if err != nil {
 						errSM := module.SendMessageTelegramRetry(0, fmt.Sprintf("[ERROR] crawl-tomtom-addr %s got error: %v", hostName, err), 5)

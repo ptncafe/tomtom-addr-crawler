@@ -1,0 +1,22 @@
+{
+  "name": "tomtom-addr-crawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ptncafe/tomtom-addr-crawler.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ptncafe/tomtom-addr-crawler/issues"
+  },
+  "homepage": "https://github.com/ptncafe/tomtom-addr-crawler#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.44.1",
+    "@types/node": "^20.12.12"
+  }
+}

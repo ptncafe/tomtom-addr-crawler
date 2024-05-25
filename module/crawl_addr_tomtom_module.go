@@ -15,9 +15,12 @@ import (
 
 const domain_url = "https://plan.tomtom.com/en/?p=10.82734,106.66315,9.55z&q=10.76397248,106.6881186"
 
-func CrawlAddressFromTomtom(ctx context.Context, domainUrl string, inputFile string, outputFile string) error {
+func CrawlAddressFromTomtom(ctx context.Context, domainUrl string, inputFile string, outputFile string, debug string) error {
 	hostName, err := os.Hostname()
-
+	headless := true
+	if(debug == "true"){
+		headless = false
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			errSM := SendMessageTelegram(0, fmt.Sprintf("[ERROR] crawl-tomtom-addr got panic: %v", r))
@@ -41,7 +44,8 @@ func CrawlAddressFromTomtom(ctx context.Context, domainUrl string, inputFile str
 		return err
 	}
 	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
-		Headless: playwright.Bool(true),
+		Headless: playwright.Bool(headless),
+
 	})
 	if err != nil {
 		logrus.WithError(err).Error("Chromium.Launch %v", err)
@@ -77,6 +81,11 @@ func CrawlAddressFromTomtom(ctx context.Context, domainUrl string, inputFile str
 	defer writer.Flush()
 	logrus.Debugf("CrawlAddressFromTomtom init and started %s", domainUrl)
 	index := -1
+	time.Sleep(2 * time.Second)
+	if err = page.Locator(".sales-modal__close-wrapper").Click(); err != nil {
+		logrus.WithError(err).Error(".sales-modal__close-wrapper.Click %v", err)
+		return err
+	}
 	for {
 		rec, err := csvReader.Read()
 		if err == io.EOF {
@@ -86,6 +95,7 @@ func CrawlAddressFromTomtom(ctx context.Context, domainUrl string, inputFile str
 		if index <= 0 {
 			continue
 		}
+		
 		err = retry.Do(
 			func() error {
 				if errDetail := crawlDetail(ctx, page, rec, writer); errDetail != nil {

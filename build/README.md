@@ -21,7 +21,7 @@ Crawl data from Tomtom
 #### Install playwright
 
 ```  
-go run github.com/playwright-community/playwright-go/cmd/playwright@latest install --with-deps  
+go run github.com/playwright-community/playwright-go/cmd/playwright@v0.4001.0 install --with-deps  
 ```  
 Docs:
 ```
@@ -33,12 +33,18 @@ https://playwright.dev/
 Crawl the address data from Tomtom
 
 #### Windows
+
 ```shell  
 ./tomtom-addr-crawler-windows-amd64.exe c  
-OPTIONS:  
- --input value, -i value       Input CSV file (default: "data/data.csv")  
-  --output value, -o value      Ouput CSV file  --domain-url value, -d value  Tomtom Domain (default: "https://plan.tomtom.com/en/?p=10.82734,106.66315,9.55z&q=10.76397248,106.6881186")  
-  --help, -h                    show help  
+USAGE:
+   tomtom-addr-crawler-linux-amd64 crawl-tomtom-addr [command options] [arguments...]
+
+OPTIONS:
+   --input value, -i value       Input CSV file (default: "data/data.csv")
+   --output value, -o value      Ouput CSV file
+   --domain-url value, -d value  Tomtom Domain (default: "https://plan.tomtom.com/en/?p=10.82734,106.66315,9.55z&q=10.76397248,106.6881186")
+   --debug value, -g value       debug (default: "false")
+   --help, -h                    show help
 ```  
 
 ## Contributing

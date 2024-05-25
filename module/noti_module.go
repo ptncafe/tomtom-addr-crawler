@@ -1,18 +1,19 @@
 package module
 
 import (
+	"os"
+	"time"
+
 	"github.com/avast/retry-go"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 var bot *tgbotapi.BotAPI
-var bt = "empty"
 
 func SendMessageTelegram(chatID int64, text string) error {
 	if bot == nil {
-		botTmp, err := tgbotapi.NewBotAPI(bt)
+		botTmp, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_KEY"))
 		if err != nil {
 			logrus.WithError(err).Error("SendMessageTelegram NewBotAPI %v", err)
 			return err
